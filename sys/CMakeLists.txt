@@ -71,3 +71,7 @@ endif (SAPERA_FOUND)
 if (XCLIB_FOUND)
 	add_subdirectory(pixci)
 endif (XCLIB_FOUND)
+
+if (BC63XPCI_FOUND)
+	add_subdirectory(bc63xpci)
+endif (BC63XPCI_FOUND)
