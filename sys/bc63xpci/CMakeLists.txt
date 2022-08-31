@@ -21,7 +21,7 @@ add_library (${libname} MODULE
   ${GOBJECT_LIBRARIES}
   ${GSTREAMER_LIBRARY}
   ${GSTREAMER_BASE_LIBRARY}
-  ${BC63XPCI_LIBRARIES}
+  ${BC63XPCI_LIBRARY}
   )
 
   target_link_libraries (${libname}
