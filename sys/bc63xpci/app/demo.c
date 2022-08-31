@@ -5,11 +5,11 @@
 int
 main (int argc, char *argv[])
 {
-  GstElement *pipeline, *source, *sink;
+  GstElement *pipeline, *source, *timecodestamper, *timeoverlay, *sink;
   GstBus *bus;
   GstMessage *msg;
   GstStateChangeReturn ret;
-  GstClock *bcClock;
+  
 
 
   /* Initialize GStreamer */
@@ -18,28 +18,28 @@ main (int argc, char *argv[])
   /* Create the elements */
   source = gst_element_factory_make ("videotestsrc", "source");
   sink = gst_element_factory_make ("autovideosink", "sink");
+  timeoverlay = gst_element_factory_make ("timeoverlay", "timeoverlay");
+  timecodestamper = gst_element_factory_make("timecodestamper", "timecodestamper");
 
-  if (!gst_bc63x_init(GST_BC63X_CLOCK_ID_NONE, NULL))
-    g_error ("failed to init bc63xpci");
+  
 
-  bcClock = gst_bc63x_clock_new("bc635PCIe", 0);
-
-  GstClockTime test;
-  test = gst_clock_get_time (bcClock);
 
   /* Create the empty pipeline */
   pipeline = gst_pipeline_new ("test-pipeline");
 
-  gst_pipeline_set_clock(GST_PIPELINE(pipeline), bcClock);
+  GstClock* clk = gst_bc63x_clock_new("bc635-clock", 0);
+  gst_clock_wait_for_sync(clk, GST_CLOCK_TIME_NONE);
+  gst_pipeline_use_clock(GST_PIPELINE(pipeline), clk);
 
-  if (!pipeline || !source || !sink) {
+
+  if (!pipeline || !source || !sink || !timecodestamper || !timeoverlay) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
 
   /* Build the pipeline */
-  gst_bin_add_many (GST_BIN (pipeline), source, sink, NULL);
-  if (gst_element_link (source, sink) != TRUE) {
+  gst_bin_add_many (GST_BIN (pipeline), source, timecodestamper, timeoverlay, sink, NULL);
+  if (gst_element_link_many (source, timecodestamper, timeoverlay, sink, NULL) != TRUE) {
     g_printerr ("Elements could not be linked.\n");
     gst_object_unref (pipeline);
     return -1;
@@ -48,6 +48,10 @@ main (int argc, char *argv[])
   /* Modify the source's properties */
   g_object_set (source, "pattern", 0, NULL);
 
+  g_object_set(timecodestamper, "source", 5, NULL);
+  g_object_set(timeoverlay, "time-mode", 3, NULL);
+  
+
   /* Start playing */
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
@@ -55,6 +59,8 @@ main (int argc, char *argv[])
     gst_object_unref (pipeline);
     return -1;
   }
+
+  //gst_pipeline_set_clock(GST_PIPELINE(pipeline), bcClock);
 
   /* Wait until error or EOS */
   bus = gst_element_get_bus (pipeline);

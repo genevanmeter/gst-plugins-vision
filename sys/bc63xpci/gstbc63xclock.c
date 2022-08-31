@@ -27,6 +27,7 @@ struct _GstBc63xClockPrivate
 {
   guint device_number;
   GstClock *bc_clock;
+  GstClockTime start_time;
 };
 
 
@@ -145,7 +146,9 @@ gst_bc63x_clock_get_internal_time (GstClock * clock)
     return GST_CLOCK_TIME_NONE;
       
   }
-  timestamp = (maj * GST_SECOND) + (min * GST_MSECOND) + (nano * G_GINT64_CONSTANT(100) * GST_NSECOND);
+  timestamp = (maj * GST_SECOND) + (min * GST_USECOND) + (nano * G_GINT64_CONSTANT(100) * GST_NSECOND);
+
+  g_print("bc63xPCIe Timestamp: %lld\n", timestamp);
 
   return timestamp;
 }
