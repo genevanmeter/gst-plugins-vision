@@ -28,6 +28,11 @@ add_library (${libname} MODULE
   ${LIBRARIES}
   )
 
+add_executable(bc63x_demo app/demo.c)
+target_link_libraries (bc63x_demo
+  ${LIBRARIES}
+  )
+
 if (WIN32)
   install (FILES $<TARGET_PDB_FILE:${libname}> DESTINATION ${PDB_INSTALL_DIR} COMPONENT pdb OPTIONAL)
 endif ()
