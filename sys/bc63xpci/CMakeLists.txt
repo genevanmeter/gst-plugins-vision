@@ -12,7 +12,7 @@ link_directories(${BC63XPCI_LIBRARY_DIR})
 
 set (libname gstbc63xclock)
 
-add_library (${libname} MODULE
+add_library (${libname} SHARED
   ${SOURCES}
   ${HEADERS})
 
@@ -28,10 +28,11 @@ add_library (${libname} MODULE
   ${LIBRARIES}
   )
 
+
 add_executable(bc63x_demo app/demo.c)
 target_link_libraries (bc63x_demo
-  ${LIBRARIES}
-  )
+  ${libname}
+)
 
 if (WIN32)
   install (FILES $<TARGET_PDB_FILE:${libname}> DESTINATION ${PDB_INSTALL_DIR} COMPONENT pdb OPTIONAL)

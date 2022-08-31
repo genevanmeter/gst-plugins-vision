@@ -68,7 +68,7 @@ gboolean        gst_bc63x_is_initialized             (void);
 
 GST_API
 gboolean        gst_bc63x_init                       (guint64 clock_id,
-                                                    gchar ** interfaces);
+                                                    guint deviceIndex);
 GST_API
 void            gst_bc63x_deinit                     (void);
 
