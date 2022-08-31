@@ -9,6 +9,7 @@ main (int argc, char *argv[])
   GstBus *bus;
   GstMessage *msg;
   GstStateChangeReturn ret;
+  GstElement* videofilter;
   
 
 
@@ -20,7 +21,9 @@ main (int argc, char *argv[])
   sink = gst_element_factory_make ("autovideosink", "sink");
   timeoverlay = gst_element_factory_make ("timeoverlay", "timeoverlay");
   timecodestamper = gst_element_factory_make("timecodestamper", "timecodestamper");
+  videofilter = gst_element_factory_make("capsfilter", NULL);
 
+  
   
 
 
@@ -37,19 +40,26 @@ main (int argc, char *argv[])
     return -1;
   }
 
+
   /* Build the pipeline */
-  gst_bin_add_many (GST_BIN (pipeline), source, timecodestamper, timeoverlay, sink, NULL);
-  if (gst_element_link_many (source, timecodestamper, timeoverlay, sink, NULL) != TRUE) {
+  gst_bin_add_many (GST_BIN (pipeline), source, videofilter, timecodestamper, timeoverlay, sink, NULL);
+  if (gst_element_link_many (source, videofilter, timecodestamper, timeoverlay, sink, NULL) != TRUE) {
     g_printerr ("Elements could not be linked.\n");
     gst_object_unref (pipeline);
     return -1;
   }
+
 
   /* Modify the source's properties */
   g_object_set (source, "pattern", 0, NULL);
 
   g_object_set(timecodestamper, "source", 5, NULL);
   g_object_set(timeoverlay, "time-mode", 3, NULL);
+
+  GstCaps* videoCap;
+  videoCap = gst_caps_from_string("video/x-raw,width=1280,height=720,framerate=100/1");
+  g_object_set(G_OBJECT(videofilter), "caps", videoCap, NULL);
+  gst_caps_unref(videoCap);
   
 
   /* Start playing */
