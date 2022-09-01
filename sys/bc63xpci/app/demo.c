@@ -1,5 +1,4 @@
 #include <gst/gst.h>
-
 #include "sys/bc63xpci/gstbc63xclock.h"
 
 
@@ -8,7 +7,21 @@ cb_have_data(GstPad* pad,
     GstPadProbeInfo* info,
     gpointer         user_data)
 {
-    g_print("Here I am\n");
+    GstBuffer* buffer = GST_PAD_PROBE_INFO_BUFFER(info);
+
+    //GstMapInfo mapInfo;
+    //if (!gst_buffer_map(buffer, &mapInfo, GST_MAP_READ))
+    //{
+    //    return GST_PAD_PROBE_OK;
+    //}
+
+
+
+    GstClockTime timestamp = GST_BUFFER_TIMESTAMP(buffer);
+    g_print("%lld\n", timestamp);
+
+    //g_print("Received event %" GST_PTR_FORMAT " on pad %" GST_PTR_FORMAT, event, pad);
+
 
     return GST_PAD_PROBE_OK;
 }
@@ -42,9 +55,16 @@ main (int argc, char *argv[])
   /* Create the empty pipeline */
   pipeline = gst_pipeline_new ("test-pipeline");
 
-  GstClock* clk = gst_bc63x_clock_new("bc635-clock", 0); 
+  gst_element_set_base_time(pipeline, 0);
+  gst_element_set_start_time(pipeline, GST_CLOCK_TIME_NONE);
+
+  GstClock* clk = gst_bc63x_clock_new("bc635-clock", 0);
   gst_clock_wait_for_sync(clk, GST_CLOCK_TIME_NONE);
   gst_pipeline_use_clock(GST_PIPELINE(pipeline), clk);
+
+
+
+  
   
 
 
@@ -55,8 +75,8 @@ main (int argc, char *argv[])
 
 
   /* Build the pipeline */
-  gst_bin_add_many (GST_BIN (pipeline), source, videofilter,  sink, NULL);
-  if (gst_element_link_many (source, videofilter, sink, NULL) != TRUE) {
+  gst_bin_add_many (GST_BIN (pipeline), source, videofilter, timeoverlay, sink, NULL);
+  if (gst_element_link_many (source, videofilter, timeoverlay, sink, NULL) != TRUE) {
     g_printerr ("Elements could not be linked.\n");
     gst_object_unref (pipeline);
     return -1;
@@ -65,12 +85,15 @@ main (int argc, char *argv[])
 
   /* Modify the source's properties */
   g_object_set (source, "pattern", 0, NULL);
+  g_object_set(source, "is-live", TRUE, NULL);
 
   g_object_set(timecodestamper, "source", 5, NULL);
-  g_object_set(timeoverlay, "time-mode", 3, NULL);
+  g_object_set(timeoverlay, "time-mode", 2, NULL);
+
+  
 
   GstCaps* videoCap;
-  videoCap = gst_caps_from_string("video/x-raw,width=1280,height=720,framerate=1/1");
+  videoCap = gst_caps_from_string("video/x-raw,width=1280,height=720,framerate=100/1");
   g_object_set(G_OBJECT(videofilter), "caps", videoCap, NULL);
   gst_caps_unref(videoCap);
 
@@ -78,6 +101,9 @@ main (int argc, char *argv[])
   gst_pad_add_probe(pad, GST_PAD_PROBE_TYPE_BUFFER,
       (GstPadProbeCallback)cb_have_data, NULL, NULL);
   gst_object_unref(pad);
+  
+
+  
   
 
   /* Start playing */
@@ -88,7 +114,9 @@ main (int argc, char *argv[])
     return -1;
   }
 
-  //gst_pipeline_set_clock(GST_PIPELINE(pipeline), bcClock);
+
+
+
 
   /* Wait until error or EOS */
   bus = gst_element_get_bus (pipeline);
