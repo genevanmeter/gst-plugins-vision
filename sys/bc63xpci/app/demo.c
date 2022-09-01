@@ -2,6 +2,18 @@
 
 #include "sys/bc63xpci/gstbc63xclock.h"
 
+
+static GstPadProbeReturn
+cb_have_data(GstPad* pad,
+    GstPadProbeInfo* info,
+    gpointer         user_data)
+{
+    g_print("Here I am\n");
+
+    return GST_PAD_PROBE_OK;
+}
+
+
 int
 main (int argc, char *argv[])
 {
@@ -10,6 +22,7 @@ main (int argc, char *argv[])
   GstMessage *msg;
   GstStateChangeReturn ret;
   GstElement* videofilter;
+  GstPad* pad;
   
 
 
@@ -57,9 +70,14 @@ main (int argc, char *argv[])
   g_object_set(timeoverlay, "time-mode", 3, NULL);
 
   GstCaps* videoCap;
-  videoCap = gst_caps_from_string("video/x-raw,width=1280,height=720,framerate=100/1");
+  videoCap = gst_caps_from_string("video/x-raw,width=1280,height=720,framerate=1/1");
   g_object_set(G_OBJECT(videofilter), "caps", videoCap, NULL);
   gst_caps_unref(videoCap);
+
+  pad = gst_element_get_static_pad(source, "src");
+  gst_pad_add_probe(pad, GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback)cb_have_data, NULL, NULL);
+  gst_object_unref(pad);
   
 
   /* Start playing */
@@ -77,6 +95,8 @@ main (int argc, char *argv[])
   msg =
       gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
       GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+
+  
 
   /* Parse message */
   if (msg != NULL) {
