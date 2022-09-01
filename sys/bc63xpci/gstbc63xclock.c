@@ -14,6 +14,10 @@
 #endif /* G_OS_WIN32 */
 #include "BC637PCI.h"
 
+GST_DEBUG_CATEGORY_STATIC(bc63x_debug);
+#define GST_CAT_DEFAULT (bc63x_debug)
+
+
 enum
 {
   PROP_0,
@@ -148,7 +152,10 @@ gst_bc63x_clock_get_internal_time (GstClock * clock)
   }
   timestamp = (maj * GST_SECOND) + (min * GST_USECOND) + (nano * G_GINT64_CONSTANT(100) * GST_NSECOND);
 
-  g_print("bc63xPCIe Timestamp: %lld\n", timestamp);
+  //g_print("bc63xPCIe Timestamp: %lld\n", timestamp);
+  GST_LOG("bc63xPCI Timestamp: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS(timestamp));
+
 
   return timestamp;
 }
@@ -164,6 +171,8 @@ gboolean
 gst_bc63x_init (guint64 clock_id, guint deviceIndex)
 {
   gboolean ret = FALSE;
+
+  GST_DEBUG_CATEGORY_INIT(bc63x_debug, "bc63x", 0, "bc63x clock");
 
   if(bcStartPCI(deviceIndex) == RC_OK)
   {

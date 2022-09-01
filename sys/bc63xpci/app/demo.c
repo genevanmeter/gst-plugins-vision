@@ -24,15 +24,15 @@ main (int argc, char *argv[])
   videofilter = gst_element_factory_make("capsfilter", NULL);
 
   
-  
 
 
   /* Create the empty pipeline */
   pipeline = gst_pipeline_new ("test-pipeline");
 
-  GstClock* clk = gst_bc63x_clock_new("bc635-clock", 0);
+  GstClock* clk = gst_bc63x_clock_new("bc635-clock", 0); 
   gst_clock_wait_for_sync(clk, GST_CLOCK_TIME_NONE);
   gst_pipeline_use_clock(GST_PIPELINE(pipeline), clk);
+  
 
 
   if (!pipeline || !source || !sink || !timecodestamper || !timeoverlay) {
@@ -42,8 +42,8 @@ main (int argc, char *argv[])
 
 
   /* Build the pipeline */
-  gst_bin_add_many (GST_BIN (pipeline), source, videofilter, timecodestamper, timeoverlay, sink, NULL);
-  if (gst_element_link_many (source, videofilter, timecodestamper, timeoverlay, sink, NULL) != TRUE) {
+  gst_bin_add_many (GST_BIN (pipeline), source, videofilter,  sink, NULL);
+  if (gst_element_link_many (source, videofilter, sink, NULL) != TRUE) {
     g_printerr ("Elements could not be linked.\n");
     gst_object_unref (pipeline);
     return -1;
