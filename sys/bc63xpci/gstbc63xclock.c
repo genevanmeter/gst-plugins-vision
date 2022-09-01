@@ -153,8 +153,7 @@ gst_bc63x_clock_get_internal_time (GstClock * clock)
   timestamp = (maj * GST_SECOND) + (min * GST_USECOND) + (nano * G_GINT64_CONSTANT(100) * GST_NSECOND);
 
   //g_print("bc63xPCIe Timestamp: %lld\n", timestamp);
-  GST_LOG("bc63xPCI Timestamp: %" GST_TIME_FORMAT,
-      GST_TIME_ARGS(timestamp));
+  GST_LOG("bc63xPCI Timestamp(ns): %lld", timestamp);
 
 
   return timestamp;
