@@ -18,7 +18,7 @@ cb_have_data(GstPad* pad,
 
 
     GstClockTime timestamp = GST_BUFFER_TIMESTAMP(buffer);
-    g_print("%lld\n", timestamp);
+    g_print("New Frame: %lld\n", timestamp);
 
     //g_print("Received event %" GST_PTR_FORMAT " on pad %" GST_PTR_FORMAT, event, pad);
 
@@ -30,7 +30,7 @@ cb_have_data(GstPad* pad,
 int
 main (int argc, char *argv[])
 {
-  GstElement *pipeline, *source, *timecodestamper, *timeoverlay, *sink;
+  GstElement *pipeline, *source, *timeoverlay, *videoconvert, *sink;
   GstBus *bus;
   GstMessage *msg;
   GstStateChangeReturn ret;
@@ -43,12 +43,11 @@ main (int argc, char *argv[])
   gst_init (&argc, &argv);
 
   /* Create the elements */
-  source = gst_element_factory_make ("videotestsrc", "source");
+  source = gst_element_factory_make ("decklinkvideosrc", "source");
   sink = gst_element_factory_make ("autovideosink", "sink");
   timeoverlay = gst_element_factory_make ("timeoverlay", "timeoverlay");
-  timecodestamper = gst_element_factory_make("timecodestamper", "timecodestamper");
   videofilter = gst_element_factory_make("capsfilter", NULL);
-
+  videoconvert = gst_element_factory_make("videoconvert", "videoconvert");
   
 
 
@@ -68,15 +67,15 @@ main (int argc, char *argv[])
   
 
 
-  if (!pipeline || !source || !sink || !timecodestamper || !timeoverlay) {
+  if (!pipeline || !source || !sink || !timeoverlay) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
 
 
   /* Build the pipeline */
-  gst_bin_add_many (GST_BIN (pipeline), source, videofilter, timeoverlay, sink, NULL);
-  if (gst_element_link_many (source, videofilter, timeoverlay, sink, NULL) != TRUE) {
+  gst_bin_add_many (GST_BIN (pipeline), source, videoconvert, timeoverlay, sink, NULL);
+  if (gst_element_link_many (source, videoconvert, timeoverlay, sink, NULL) != TRUE) {
     g_printerr ("Elements could not be linked.\n");
     gst_object_unref (pipeline);
     return -1;
@@ -84,10 +83,12 @@ main (int argc, char *argv[])
 
 
   /* Modify the source's properties */
-  g_object_set (source, "pattern", 0, NULL);
-  g_object_set(source, "is-live", TRUE, NULL);
+  /*g_object_set (source, "pattern", 0, NULL);
+  g_object_set(source, "is-live", TRUE, NULL);*/
+  g_object_set(source, "device-number", 0, NULL);
+  g_object_set(source, "mode", "1080p60", NULL);
 
-  g_object_set(timecodestamper, "source", 5, NULL);
+
   g_object_set(timeoverlay, "time-mode", 2, NULL);
 
   
